@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,8 +26,36 @@ public class SellerDaoJDBC implements SellerDAO {
 
 	@Override
 	public void insert(Seller dp) {
-		// TODO Auto-generated method stub
+		PreparedStatement st = null;
 
+		try {
+			st = conn.prepareStatement("" + "INSERT INTO seller\r\n"
+					+ "(Name, Email, BirthDate, BaseSalary, DepartmentId)\r\n" + "VALUES\r\n" + "(?, ?, ?, ?, ?)",
+					Statement.RETURN_GENERATED_KEYS);
+
+			st.setString(1, dp.getName());
+			st.setString(2, dp.getEmail());
+			st.setDate(3, new java.sql.Date(dp.getBirthDate().getTime()));
+			st.setDouble(4, dp.getBaseSalary());
+			st.setInt(5, dp.getDepartment().getId());
+
+			int rows = st.executeUpdate();
+			if (rows > 0) {
+				ResultSet rs = st.getGeneratedKeys();
+				if (rs.next()) {
+					int id = rs.getInt(1);
+					dp.setId(id);
+				}
+				DB.closeResultSet(rs);
+			} else {
+				throw new DbException("Unexpected error. No rows affected !");
+			}
+
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+		}
 	}
 
 	@Override
@@ -93,10 +122,10 @@ public class SellerDaoJDBC implements SellerDAO {
 		ResultSet rs = null;
 
 		try {
-			st = conn.prepareStatement("" + "SELECT seller.*,department.Name as DepName\n"
-					+ "FROM seller INNER JOIN department\n" + "ON seller.DepartmentId = department.Id\n"
-					+ "ORDER BY Name");
-			
+			st = conn.prepareStatement(
+					"" + "SELECT seller.*,department.Name as DepName\n" + "FROM seller INNER JOIN department\n"
+							+ "ON seller.DepartmentId = department.Id\n" + "ORDER BY Name");
+
 			rs = st.executeQuery();
 
 			List<Seller> list = new ArrayList<>();
