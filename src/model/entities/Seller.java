@@ -106,7 +106,4 @@ public class Seller implements Serializable {
 				+ "\n Base Salary: " + baseSalary 
 				+ "\n\n DEPARTMENT: " + department;
 	}
-
-	
-
 }
